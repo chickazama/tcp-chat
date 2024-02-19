@@ -20,8 +20,10 @@ func main() {
 	}
 	defer conn.Close()
 	br := bufio.NewReader(os.Stdin)
+	cr := bufio.NewReader(conn)
 	for {
 		br.Reset(os.Stdin)
+		cr.Reset(conn)
 		outBuf, err := br.ReadBytes('\n')
 		if err != nil {
 			log.Fatal(err.Error())
@@ -30,10 +32,9 @@ func main() {
 		if err != nil {
 			log.Fatalf("%s: bytes written: %d", err.Error(), n)
 		}
-		var inBuf []byte
-		n, err = conn.Read(inBuf)
+		inBuf, err := cr.ReadBytes('\n')
 		if err != nil {
-			log.Fatalf("%s: bytes read: %d", err.Error(), n)
+			log.Fatal(err.Error())
 		}
 		fmt.Printf("%s\n", string(inBuf))
 	}
