@@ -12,6 +12,14 @@ const (
 	addr    = "127.0.0.1:49000"
 )
 
+var (
+	msg chan []byte
+)
+
+func init() {
+	msg = make(chan []byte)
+}
+
 func main() {
 	listener, err := net.Listen(network, addr)
 	if err != nil {
@@ -23,17 +31,27 @@ func main() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+	go read(conn)
+	write(conn)
+}
+
+func read(conn net.Conn) {
 	defer conn.Close()
-	fmt.Println("Client connected.")
 	br := bufio.NewReader(conn)
 	for {
 		br.Reset(conn)
-		inBuf, err := br.ReadBytes('\n')
+		buf, err := br.ReadBytes('\n')
 		if err != nil {
 			log.Fatal(err.Error())
 		}
-		fmt.Printf("%s", string(inBuf))
-		n, err := conn.Write([]byte("Server: OK!\n"))
+		fmt.Printf("%s", string(buf))
+		msg <- buf
+	}
+}
+
+func write(conn net.Conn) {
+	for m := range msg {
+		n, err := conn.Write(m)
 		if err != nil {
 			log.Fatalf("%s: bytes written: %d", err.Error(), n)
 		}
