@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
 	"net"
@@ -24,4 +25,17 @@ func main() {
 	}
 	defer conn.Close()
 	fmt.Println("Client connected.")
+	br := bufio.NewReader(conn)
+	for {
+		br.Reset(conn)
+		inBuf, err := br.ReadBytes('\n')
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		fmt.Printf("%s", string(inBuf))
+		n, err := conn.Write([]byte("Server: OK!\n"))
+		if err != nil {
+			log.Fatalf("%s: bytes written: %d", err.Error(), n)
+		}
+	}
 }
