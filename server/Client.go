@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"net"
 )
@@ -20,23 +21,25 @@ func NewClient(conn net.Conn) *Client {
 	return ret
 }
 
-func (c *Client) Write() {
-	for msg := range c.Out {
-		n, err := c.Conn.Write(msg)
-		if err != nil {
-			log.Fatalf("%s: bytes written: %d", err.Error(), n)
-		}
-	}
-}
-
 func (c *Client) Read() {
 	br := bufio.NewReader(c.Conn)
 	for {
 		br.Reset(c.Conn)
 		buf, err := br.ReadBytes('\n')
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Println("Client exited")
+			c.Conn.Close()
 		}
+		fmt.Printf("%s", buf)
 		c.Server.In <- buf
+	}
+}
+
+func (c *Client) Write() {
+	for msg := range c.Out {
+		n, err := c.Conn.Write(msg)
+		if err != nil {
+			log.Fatalf("%s: bytes written: %d", err.Error(), n)
+		}
 	}
 }
