@@ -1,6 +1,6 @@
 # TCP Chat
 
-A command-line group chat application, using TCP sockets, written in C.
+A command-line group chat application, using TCP sockets, written in Go.
 
 ## N.B.
 
