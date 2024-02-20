@@ -7,7 +7,6 @@ import (
 	"log"
 	"net"
 	"os"
-	"sync"
 
 	"github.com/awesome-gocui/gocui"
 )
@@ -18,8 +17,8 @@ const (
 )
 
 var (
-	name       string
-	wg         sync.WaitGroup
+	name string
+	// wg         sync.WaitGroup
 	viewEditor = gocui.EditorFunc(simpleEditor)
 	conn       net.Conn
 	send       chan []byte
@@ -54,6 +53,9 @@ func main() {
 		log.Fatal(err.Error())
 	}
 	if err := g.SetKeybinding("input", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
+		log.Panicln(err)
+	}
+	if err := g.SetKeybinding("input", gocui.KeyCtrlD, gocui.ModNone, quit); err != nil {
 		log.Panicln(err)
 	}
 	conn, err = net.Dial(network, addr)
@@ -98,7 +100,7 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 }
 
 func updateView(g *gocui.Gui) {
-	defer wg.Done()
+	// defer wg.Done()
 	for {
 		select {
 		case buf := <-receive:
@@ -170,7 +172,7 @@ func simpleEditor(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
 }
 
 func read() {
-	defer wg.Done()
+	// defer wg.Done()
 	br := bufio.NewReader(conn)
 	for {
 		buf, err := br.ReadBytes('\n')
