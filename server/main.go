@@ -32,8 +32,8 @@ func main() {
 		if err != nil {
 			log.Fatal(err.Error())
 		}
-		c := NewClient(conn)
-		pool.Clients[i] = c
+		c := NewClient(i+1, conn)
+		pool.Clients[i+1] = c
 		go c.Read()
 		go c.Write()
 	}
