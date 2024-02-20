@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"sync"
 
 	"github.com/awesome-gocui/gocui"
@@ -17,6 +18,7 @@ const (
 )
 
 var (
+	name       string
 	wg         sync.WaitGroup
 	viewEditor = gocui.EditorFunc(simpleEditor)
 	conn       net.Conn
@@ -25,6 +27,21 @@ var (
 )
 
 func main() {
+	fmt.Println("Welcome to TCP Chat")
+	fmt.Print("Please enter your name: ")
+	br := bufio.NewReader(os.Stdin)
+	for {
+		buf, err := br.ReadString('\n')
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		if len(buf) > 1 {
+			name = fmt.Sprintf("%s: ", buf[:len(buf)-1])
+			break
+		}
+		fmt.Printf("Name cannot be empty. Please enter your name: ")
+	}
+
 	send = make(chan []byte)
 	receive = make(chan []byte)
 	g, err := gocui.NewGui(gocui.OutputNormal, true)
@@ -66,6 +83,9 @@ func layout(g *gocui.Gui) error {
 		}
 		v.Editable = true
 		v.Editor = viewEditor
+		for _, r := range name {
+			v.EditWrite(r)
+		}
 		if _, err := g.SetCurrentView("input"); err != nil {
 			return err
 		}
@@ -93,7 +113,8 @@ func updateView(g *gocui.Gui) {
 		case buf := <-send:
 			n, err := conn.Write(buf)
 			if err != nil {
-				log.Fatalf("Bytes Written: %d: %s\n", n, err.Error())
+				log.Printf("Bytes Written: %d: %s\n", n, err.Error())
+				return
 			}
 		}
 	}
@@ -108,21 +129,35 @@ func simpleEditor(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) {
 	case gocui.KeySpace:
 		v.EditWrite(' ')
 	case gocui.KeyBackspace, gocui.KeyBackspace2:
-		v.EditDelete(true)
+		x, _ := v.Cursor()
+		if x > len(name) {
+			v.EditDelete(true)
+		}
 	case gocui.KeyDelete:
-		v.EditDelete(false)
+		x, _ := v.Cursor()
+		if x > len(name) {
+			v.EditDelete(false)
+		}
 	case gocui.KeyInsert:
 		v.Overwrite = !v.Overwrite
 	case gocui.KeyEnter:
-		v.EditWrite('\n')
-		send <- []byte(v.Buffer())
-		v.Clear()
+		if len(v.Buffer()) > len(name) {
+			v.EditWrite('\n')
+			send <- []byte(v.Buffer())
+			v.Clear()
+			for _, r := range name {
+				v.EditWrite(r)
+			}
+		}
 	case gocui.KeyArrowDown:
 		v.MoveCursor(0, 1)
 	case gocui.KeyArrowUp:
 		v.MoveCursor(0, -1)
 	case gocui.KeyArrowLeft:
-		v.MoveCursor(-1, 0)
+		x, _ := v.Cursor()
+		if x > len(name) {
+			v.MoveCursor(-1, 0)
+		}
 	case gocui.KeyArrowRight:
 		v.MoveCursor(1, 0)
 	case gocui.KeyTab:
@@ -140,7 +175,8 @@ func read() {
 	for {
 		buf, err := br.ReadBytes('\n')
 		if err != nil {
-			log.Fatal(err.Error())
+			log.Println(err.Error())
+			return
 		}
 		receive <- buf
 		br.Reset(conn)
