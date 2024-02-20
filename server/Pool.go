@@ -1,5 +1,10 @@
 package main
 
+import (
+	"fmt"
+	"time"
+)
+
 type Pool struct {
 	In      chan []byte
 	Clients map[int]*Client
@@ -14,8 +19,10 @@ func NewPool() *Pool {
 
 func (p *Pool) Run() {
 	for m := range p.In {
+		t := time.Now().UTC().Format(time.DateTime)
+		msg := fmt.Sprintf("[%s] - %s", t, m)
 		for _, c := range p.Clients {
-			c.Out <- m
+			c.Out <- []byte(msg)
 		}
 	}
 }
