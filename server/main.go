@@ -14,7 +14,7 @@ const (
 )
 
 const (
-	maxConnections = 10
+	maxConnections = 100
 )
 
 var (
