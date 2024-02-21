@@ -49,22 +49,7 @@ func main() {
 		log.Fatal(err.Error())
 	}
 	printGreeting()
-	fmt.Printf("\nPlease enter your name: ")
-	br := bufio.NewReader(os.Stdin)
-	for {
-		buf, err := br.ReadString('\n')
-		if err != nil {
-			log.Fatal(err.Error())
-		}
-		if len(buf) > 1 {
-			if len(buf) > maxNameLength {
-				buf = buf[:maxNameLength]
-			}
-			name = fmt.Sprintf("%s: ", buf[:len(buf)-1])
-			break
-		}
-		fmt.Printf("Name cannot be empty. Please enter your name: ")
-	}
+	readName()
 	// Set up GUI
 	g, err := gocui.NewGui(gocui.OutputNormal, true)
 	if err != nil {
@@ -72,42 +57,55 @@ func main() {
 	}
 	defer g.Close()
 	g.SetManagerFunc(layout)
+	err = initKeyBindings(g)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
-		log.Panicln(err)
+	// Spawn a go-routine to update the view
+	go updateView(g)
+	initalOut := fmt.Sprintf("%s\n", name)
+	send <- []byte(initalOut)
+	if err := g.MainLoop(); err != nil && !errors.Is(err, gocui.ErrQuit) {
+		log.Fatal(err.Error())
 	}
+}
+
+func initKeyBindings(g *gocui.Gui) error {
+	// Handle CTRL+C & CTRL+D as quit commands
+	if err := g.SetKeybinding("", gocui.KeyCtrlC, gocui.ModNone, quit); err != nil {
+		return err
+	}
+	if err := g.SetKeybinding("", gocui.KeyCtrlD, gocui.ModNone, quit); err != nil {
+		return err
+	}
+	// Handle Up & Down Arrows as scroll commands
 	if err := g.SetKeybinding("", gocui.KeyArrowUp, gocui.ModNone,
 		func(g *gocui.Gui, v *gocui.View) error {
 			scrollView(g, -1)
 			return nil
 		}); err != nil {
-		log.Panicln(err.Error())
+		return err
 	}
 	if err := g.SetKeybinding("", gocui.KeyArrowDown, gocui.ModNone,
 		func(g *gocui.Gui, v *gocui.View) error {
 			scrollView(g, 1)
 			return nil
 		}); err != nil {
-		log.Panicln(err.Error())
+		return err
 	}
-	go updateView(g)
-	n := fmt.Sprintf("%s\n", name)
-	send <- []byte(n)
-	if err := g.MainLoop(); err != nil && !errors.Is(err, gocui.ErrQuit) {
-		log.Panicln(err)
-	}
+	return nil
 }
 
 func layout(g *gocui.Gui) error {
 	maxX, maxY := g.Size()
+	// Reserve majority of space for the output view
 	if v, err := g.SetView("output", 0, 1, maxX-1, maxY-4, 0); err != nil {
 		if !errors.Is(err, gocui.ErrUnknownView) {
 			return err
 		}
 		v.Autoscroll = true
 	}
+	// Reserve remaining space for input view
 	if v, err := g.SetView("input", 0, maxY-3, maxX-1, maxY-1, 0); err != nil {
 		if !errors.Is(err, gocui.ErrUnknownView) {
 			return err
@@ -157,8 +155,6 @@ func inputEditorFunc(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) 
 		return
 	}
 	switch key {
-	case gocui.KeyCtrlD:
-		// DO NOTHING
 	case gocui.KeySpace:
 		v.EditWrite(' ')
 	case gocui.KeyBackspace, gocui.KeyBackspace2:
@@ -187,10 +183,6 @@ func inputEditorFunc(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) 
 				v.EditWrite(r)
 			}
 		}
-	case gocui.KeyArrowDown:
-		v.MoveCursor(0, 1)
-	case gocui.KeyArrowUp:
-		v.MoveCursor(0, -1)
 	case gocui.KeyArrowLeft:
 		x, _ := v.Cursor()
 		if x > len(name) {
@@ -227,22 +219,18 @@ func scrollView(g *gocui.Gui, dy int) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	// Get the size and position of the view.
 	_, y := v.Size()
 	ox, oy := v.Origin()
-	// If we're at the bottom...
 	if oy+dy > strings.Count(v.ViewBuffer(), "\n")-y-1 {
-		// Set autoscroll to normal again.
 		v.Autoscroll = true
 	} else {
-		// Set autoscroll to false and scroll.
 		v.Autoscroll = false
 		v.SetOrigin(ox, oy+dy)
 	}
 }
 
 func printGreeting() {
-	fmt.Println("Welcome to TCP-Chat!")
+	fmt.Println("Welcome to TCP Chat!")
 	fmt.Println("         _nnnn_")
 	fmt.Println("        dGGGGMMb")
 	fmt.Println("       @p~qp~~qMb")
@@ -259,4 +247,24 @@ func printGreeting() {
 	fmt.Println("_)      \\.___.,|     .'")
 	fmt.Println("\\____   )MMMMMP|   .'")
 	fmt.Println("     `-'       `--'")
+}
+
+func readName() {
+	fmt.Printf("\nPlease enter your name: ")
+	br := bufio.NewReader(os.Stdin)
+	for {
+		buf, err := br.ReadString('\n')
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		if len(buf) > 1 {
+			if len(buf) > maxNameLength {
+				buf = buf[:maxNameLength]
+			}
+			name = fmt.Sprintf("%s: ", buf[:len(buf)-1])
+			break
+		}
+		fmt.Printf("Name cannot be empty. Please enter your name: ")
+		br.Reset(os.Stdin)
+	}
 }
