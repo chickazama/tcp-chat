@@ -44,7 +44,10 @@ func main() {
 	defer conn.Close()
 	cmd := exec.Command("clear")
 	cmd.Stdout = os.Stdout
-	cmd.Run()
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 	printGreeting()
 	fmt.Printf("\nPlease enter your name: ")
 	br := bufio.NewReader(os.Stdin)
