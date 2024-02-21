@@ -65,9 +65,10 @@ func main() {
 		}
 		fmt.Printf("Name cannot be empty. Please enter your name: ")
 	}
+	// Set up GUI
 	g, err := gocui.NewGui(gocui.OutputNormal, true)
 	if err != nil {
-		log.Panicln(err)
+		log.Fatal(err.Error())
 	}
 	defer g.Close()
 	g.SetManagerFunc(layout)
