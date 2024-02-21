@@ -14,7 +14,8 @@ const (
 )
 
 const (
-	maxConnections = 100
+	historyFilePath = "history.txt"
+	maxConnections  = 100
 )
 
 var (
@@ -27,7 +28,7 @@ var (
 
 func init() {
 	var err error
-	fp, err = os.OpenFile("history.txt", os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	fp, err = os.OpenFile(historyFilePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -53,7 +54,7 @@ func main() {
 		connectedClients++
 		log.Printf("Connected clients: %d\n", connectedClients)
 		mtx.Lock()
-		buf, err := os.ReadFile("history.txt")
+		buf, err := os.ReadFile(historyFilePath)
 		if err != nil {
 			log.Println(err.Error())
 			buf = []byte("Chat History Unavailable\n")
