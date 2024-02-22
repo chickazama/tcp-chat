@@ -25,25 +25,13 @@ var (
 	client      *core.Client
 	name        string
 	inputEditor = gocui.EditorFunc(inputEditorFunc)
-	// conn        net.Conn
-	// send        chan []byte
-	// receive     chan []byte
 )
 
 func init() {
 	client = core.New()
-	// send = make(chan []byte, queueSize)
-	// receive = make(chan []byte, queueSize)
-	// var err error
-	// conn, err = net.Dial(network, addr)
-	// if err != nil {
-	// 	log.Fatal(err.Error())
-	// }
-	// go read()
 }
 
 func main() {
-	// defer conn.Close()
 	cmd := exec.Command("clear")
 	cmd.Stdout = os.Stdout
 	err := cmd.Run()
@@ -191,21 +179,6 @@ func inputEditorFunc(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) 
 		v.EditWrite(ch)
 	}
 }
-
-// func read() {
-// 	br := bufio.NewReader(conn)
-// 	for {
-// 		buf, err := br.ReadBytes(0)
-// 		if err != nil {
-// 			// log.Println(err.Error())
-// 			return
-// 		}
-// 		buf[len(buf)-1] = '\n'
-// 		receive <- buf
-// 		br.Reset(conn)
-// 	}
-
-// }
 
 func scrollView(g *gocui.Gui, dy int) {
 	v, err := g.View("output")
