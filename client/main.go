@@ -230,7 +230,7 @@ func readName() {
 			name = fmt.Sprintf("%s: ", buf[:len(buf)-1])
 			break
 		}
-		fmt.Printf("Name cannot be empty. Please enter your name: ")
+		fmt.Printf("Name cannot be missing. Please enter your name: ")
 		br.Reset(os.Stdin)
 	}
 }
