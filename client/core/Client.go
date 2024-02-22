@@ -55,3 +55,6 @@ func (c *Client) write() {
 		}
 	}
 }
+
+// func (c *Client) handleMessage(buf []byte) {
+// }
