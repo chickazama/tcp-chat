@@ -18,15 +18,21 @@ type Client struct {
 	Receive chan []byte
 }
 
-func New(conn net.Conn) *Client {
+func New() *Client {
+	conn, err := net.Dial(network, addr)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 	ret := new(Client)
 	ret.Conn = conn
 	ret.Send = make(chan []byte, queueSize)
 	ret.Receive = make(chan []byte)
+	go ret.read()
+	go ret.write()
 	return ret
 }
 
-func (c *Client) Read() {
+func (c *Client) read() {
 	br := bufio.NewReader(c.Conn)
 	for {
 		buf, err := br.ReadBytes(0)
@@ -40,7 +46,7 @@ func (c *Client) Read() {
 	}
 }
 
-func (c *Client) Write() {
+func (c *Client) write() {
 	for buf := range c.Send {
 		n, err := c.Conn.Write(buf)
 		if err != nil {
