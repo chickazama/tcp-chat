@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"net"
+	"matthewhope/tcp-chat/client/core"
 	"os"
 	"os/exec"
 	"strings"
@@ -22,26 +22,28 @@ const (
 )
 
 var (
+	client      *core.Client
 	name        string
 	inputEditor = gocui.EditorFunc(inputEditorFunc)
-	conn        net.Conn
-	send        chan []byte
-	receive     chan []byte
+	// conn        net.Conn
+	// send        chan []byte
+	// receive     chan []byte
 )
 
 func init() {
-	send = make(chan []byte, queueSize)
-	receive = make(chan []byte, queueSize)
-	var err error
-	conn, err = net.Dial(network, addr)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	go read()
+	client = core.New()
+	// send = make(chan []byte, queueSize)
+	// receive = make(chan []byte, queueSize)
+	// var err error
+	// conn, err = net.Dial(network, addr)
+	// if err != nil {
+	// 	log.Fatal(err.Error())
+	// }
+	// go read()
 }
 
 func main() {
-	defer conn.Close()
+	// defer conn.Close()
 	cmd := exec.Command("clear")
 	cmd.Stdout = os.Stdout
 	err := cmd.Run()
@@ -64,7 +66,7 @@ func main() {
 	// Spawn a go-routine to update the view
 	go updateView(g)
 	initalOut := fmt.Sprintf("%s\n", name)
-	send <- []byte(initalOut)
+	client.Send <- []byte(initalOut)
 	if err := g.MainLoop(); err != nil && !errors.Is(err, gocui.ErrQuit) {
 		log.Fatal(err.Error())
 	}
@@ -127,25 +129,16 @@ func quit(g *gocui.Gui, v *gocui.View) error {
 }
 
 func updateView(g *gocui.Gui) {
-	for {
-		select {
-		case buf := <-receive:
-			g.Update(func(g *gocui.Gui) error {
-				v, err := g.View("output")
-				if err != nil {
-					return err
-				}
-				v.Autoscroll = true
-				fmt.Fprintf(v, "%s", buf)
-				return nil
-			})
-		case buf := <-send:
-			n, err := conn.Write(buf)
+	for buf := range client.Receive {
+		g.Update(func(g *gocui.Gui) error {
+			v, err := g.View("output")
 			if err != nil {
-				log.Printf("Bytes Written: %d: %s\n", n, err.Error())
-				// return
+				return err
 			}
-		}
+			v.Autoscroll = true
+			fmt.Fprintf(v, "%s", buf)
+			return nil
+		})
 	}
 }
 
@@ -177,7 +170,7 @@ func inputEditorFunc(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) 
 				out = out[:maxBufferLength]
 				out = append(out, '\n')
 			}
-			send <- out
+			client.Send <- out
 			v.Clear()
 			for _, r := range name {
 				v.EditWrite(r)
@@ -199,20 +192,20 @@ func inputEditorFunc(v *gocui.View, key gocui.Key, ch rune, mod gocui.Modifier) 
 	}
 }
 
-func read() {
-	br := bufio.NewReader(conn)
-	for {
-		buf, err := br.ReadBytes(0)
-		if err != nil {
-			// log.Println(err.Error())
-			return
-		}
-		buf[len(buf)-1] = '\n'
-		receive <- buf
-		br.Reset(conn)
-	}
+// func read() {
+// 	br := bufio.NewReader(conn)
+// 	for {
+// 		buf, err := br.ReadBytes(0)
+// 		if err != nil {
+// 			// log.Println(err.Error())
+// 			return
+// 		}
+// 		buf[len(buf)-1] = '\n'
+// 		receive <- buf
+// 		br.Reset(conn)
+// 	}
 
-}
+// }
 
 func scrollView(g *gocui.Gui, dy int) {
 	v, err := g.View("output")
