@@ -14,9 +14,10 @@ const (
 var (
 	client      *core.Client
 	name        string
-	inputEditor = gocui.EditorFunc(setInputEditor)
+	inputEditor gocui.EditorFunc
 )
 
 func init() {
 	client = core.New()
+	inputEditor = gocui.EditorFunc(setInputEditor)
 }
