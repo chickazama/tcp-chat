@@ -13,14 +13,14 @@ func setKeyBindings(g *gocui.Gui) error {
 	// Handle Up & Down Arrows as scroll commands
 	if err := g.SetKeybinding("", gocui.KeyArrowUp, gocui.ModNone,
 		func(g *gocui.Gui, v *gocui.View) error {
-			scrollView(g, -1)
+			scrollOutputView(g, -1)
 			return nil
 		}); err != nil {
 		return err
 	}
 	if err := g.SetKeybinding("", gocui.KeyArrowDown, gocui.ModNone,
 		func(g *gocui.Gui, v *gocui.View) error {
-			scrollView(g, 1)
+			scrollOutputView(g, 1)
 			return nil
 		}); err != nil {
 		return err
