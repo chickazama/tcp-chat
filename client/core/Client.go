@@ -37,7 +37,7 @@ func (c *Client) read() {
 	for {
 		buf, err := br.ReadBytes(0)
 		if err != nil {
-			// log.Println(err.Error())
+			log.Println(err.Error())
 			return
 		}
 		buf[len(buf)-1] = '\n'
@@ -51,7 +51,7 @@ func (c *Client) write() {
 		n, err := c.Conn.Write(buf)
 		if err != nil {
 			log.Printf("Bytes Written: %d: %s\n", n, err.Error())
-			// return
+			return
 		}
 	}
 }
