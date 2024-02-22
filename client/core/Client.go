@@ -2,6 +2,7 @@ package core
 
 import (
 	"bufio"
+	"log"
 	"net"
 )
 
@@ -36,5 +37,15 @@ func (c *Client) Read() {
 		buf[len(buf)-1] = '\n'
 		c.Receive <- buf
 		br.Reset(c.Conn)
+	}
+}
+
+func (c *Client) Write() {
+	for buf := range c.Send {
+		n, err := c.Conn.Write(buf)
+		if err != nil {
+			log.Printf("Bytes Written: %d: %s\n", n, err.Error())
+			// return
+		}
 	}
 }
