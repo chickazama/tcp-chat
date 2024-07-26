@@ -10,7 +10,7 @@ import (
 
 const (
 	network = "tcp4"
-	addr    = "127.0.0.1:49000"
+	addr    = "0.0.0.0:49000"
 )
 
 const (
