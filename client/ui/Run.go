@@ -4,19 +4,17 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"os"
-	"os/exec"
 
 	"github.com/awesome-gocui/gocui"
 )
 
 func Run() {
-	cmd := exec.Command("clear")
-	cmd.Stdout = os.Stdout
-	err := cmd.Run()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	// cmd := exec.Command("clear")
+	// cmd.Stdout = os.Stdout
+	// err := cmd.Run()
+	// if err != nil {
+	// 	log.Fatal(err.Error())
+	// }
 	printGreeting()
 	readName()
 	// Set up GUI
