@@ -32,4 +32,4 @@ accepts input from the user to send messages to the server.
 
 ## How to Build and Run the Server
 
-The steps required to build and run the server are identical to those of the client, except that every instance of 'client' in the commands above must be replaced with 'server'.
+The steps required to build and run the server are identical to those of the client, except that every instance of 'client' in the commands above must be replaced with 'server'. The server program also accepts an optional parameter corresponding to a TCPv4 address:port pair on which it will listen for connections. By default, this is 0.0.0.0:49000.
