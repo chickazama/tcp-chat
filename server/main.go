@@ -10,7 +10,10 @@ import (
 
 const (
 	network = "tcp4"
-	addr    = "0.0.0.0:49000"
+)
+
+var (
+	addr = "0.0.0.0:49000"
 )
 
 const (
@@ -38,6 +41,9 @@ func init() {
 
 func main() {
 	defer fp.Close()
+	if len(os.Args) >= 2 {
+		addr = os.Args[1]
+	}
 	listener, err := net.Listen(network, addr)
 	if err != nil {
 		log.Fatal(err.Error())

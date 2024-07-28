@@ -4,12 +4,16 @@ import (
 	"bufio"
 	"log"
 	"net"
+	"os"
 )
 
 const (
 	queueSize = 8
 	network   = "tcp4"
-	addr      = "127.0.0.1:49000"
+)
+
+var (
+	addr = "127.0.0.1:49000"
 )
 
 type Client struct {
@@ -19,6 +23,9 @@ type Client struct {
 }
 
 func New() *Client {
+	if len(os.Args) >= 2 {
+		addr = os.Args[1]
+	}
 	conn, err := net.Dial(network, addr)
 	if err != nil {
 		log.Fatal(err.Error())
